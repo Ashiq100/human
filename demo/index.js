@@ -655,7 +655,7 @@ async function detectSampleImages() {
 }
 
 function setupMenu() {
-  const x = [`${document.getElementById('btnDisplay').offsetLeft}px`, `${document.getElementById('btnImage').offsetLeft}px`, `${document.getElementById('btnProcess').offsetLeft}px`, `${document.getElementById('btnModel').offsetLeft}px`];
+  const x = [`${document.getElementById('btnDisplay').offsetLeft}px`, `${document.getElementById('btnImage').offsetLeft}px`, `${document.getElementById('btnProcess').offsetLeft}px`, `${document.getElementById('btnModel').offsetLeft}px`, `${document.getElementById('btnGallery').offsetLeft}px`];
 
   const top = `${document.getElementById('menubar').clientHeight}px`;
 
@@ -758,12 +758,18 @@ function setupMenu() {
     compare.original = null;
   });
 
+
+  menu.gallery = new Menu(document.body, '', { top, left: x[4] });
+  menu.gallery.addHTML('<input type="file" id="gallery-file-input" class="gallery-input-file"></input> &nbsp input');
+
+
   for (const m of Object.values(menu)) m.hide();
 
   document.getElementById('btnDisplay').addEventListener('click', (evt) => menu.display.toggle(evt));
   document.getElementById('btnImage').addEventListener('click', (evt) => menu.image.toggle(evt));
   document.getElementById('btnProcess').addEventListener('click', (evt) => menu.process.toggle(evt));
   document.getElementById('btnModel').addEventListener('click', (evt) => menu.models.toggle(evt));
+  document.getElementById('btnGallery').addEventListener('click', (evt) => menu.gallery.toggle(evt));
   document.getElementById('btnStart').addEventListener('click', () => detectVideo());
   document.getElementById('play').addEventListener('click', () => detectVideo());
 }
@@ -840,6 +846,11 @@ async function dragAndDrop() {
     if (evt.target.files.length < 2) ui.columns = 1;
     for (const f of evt.target.files) await processDataURL(f, 'process');
   };
+  document.getElementById('gallery-file-input').onchange = async (evt) => {
+    evt.preventDefault();
+    console.log('Adding images to gallery.');
+    console.log(evt.target.files);
+  }
 }
 
 async function drawHints() {
