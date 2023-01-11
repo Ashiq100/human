@@ -208,24 +208,28 @@ async function videoPause() {
 const compare = { enabled: false, original: null };
 async function calcSimmilarity(result) {
   document.getElementById('compare-container').onclick = () => {
-    log('resetting face compare baseline:');
-    compare.original = null;
+    // log('resetting face compare baseline:');
+    // compare.original = null;
   };
   document.getElementById('compare-container').style.display = compare.enabled ? 'block' : 'none';
   if (!compare.enabled) {
-    compare.original = null;
+    // log('resetting face compare baseline:');
+    // compare.original = null;
     return;
   }
   if (!result || !result.face || !result.face[0] || !result.face[0].embedding) return;
   if (!(result.face.length > 0) || (result.face[0].embedding.length <= 64)) return;
   if (!compare.original) {
-    compare.original = result;
-    log('setting face compare baseline:', result.face[0]);
+    // compare.original = result;
+    // log('setting face compare baseline:', result);
     if (result.face[0].tensor) {
+      // log('Getting orig element.');
       const c = document.getElementById('orig');
       human.tf.browser.toPixels(result.face[0].tensor, c);
     } else {
-      document.getElementById('compare-canvas').getContext('2d').drawImage(compare.original.canvas, 0, 0, 200, 200);
+      // log('Setting up compare-canvas.');
+      // log(compare.original);
+      // document.getElementById('compare-canvas').getContext('2d').drawImage(compare.original.canvas, 0, 0, 200, 200);
     }
   }
   const similarity = human.match.similarity(compare.original.face[0].embedding, result.face[0].embedding);
@@ -537,6 +541,7 @@ function runHumanDetect(input, canvas, timestamp) {
 
 // main processing function when input is image, can use direct invocation or web worker
 async function processImage(input, title) {
+  console.log(input);
   return new Promise((resolve) => {
     const image = new Image();
     image.onerror = async () => status('image loading error');
@@ -754,6 +759,7 @@ function setupMenu() {
   menu.models.addBool('object detection', userConfig.object, 'enabled', (val) => userConfig.object.enabled = val);
   menu.models.addHTML('<hr style="border-style: inset; border-color: dimgray">');
   menu.models.addBool('face compare', compare, 'enabled', (val) => {
+    log('Enabling face compare.');
     compare.enabled = val;
     compare.original = null;
   });
@@ -850,7 +856,28 @@ async function dragAndDrop() {
     evt.preventDefault();
     console.log('Adding images to gallery.');
     console.log(evt.target.files);
-  }
+
+    const promise = () => new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        if (e.target.result.startsWith('data:image')) {
+          const image = new Image();
+          image.src = e.target.result;
+          compare.enabled = true;
+          compare.original = await human.detect(image, userConfig);
+          console.log("Inside promise.");
+          console.log(compare.original);    
+          document.getElementById('compare-canvas').getContext('2d').drawImage(compare.original.canvas, 0, 0, 200, 200);
+        }
+        resolve(true);
+      };
+      console.log(evt.target.files[0]);
+      reader.readAsDataURL(evt.target.files[0]);
+    });
+    await promise();
+    console.log('Setting gallery.');
+    console.log(compare.original);
+  };
 }
 
 async function drawHints() {
